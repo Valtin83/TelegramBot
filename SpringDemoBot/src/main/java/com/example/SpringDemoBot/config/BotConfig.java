@@ -6,13 +6,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@Data
 @PropertySource("application.properties")
 public class BotConfig {
 
-    @Value("${bot.name}")
+    @Value("${bot.name:default_name}")
     String botName;
 
-    @Value("${bot.token}")
+    @Value("${bot.token:default_token}")
     String botToken;
+
+    public String getBotName() {
+        return botName;
+    }
+
+    public String getBotToken() {
+        return botToken;
+    }
 }
