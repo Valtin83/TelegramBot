@@ -1,6 +1,8 @@
 package com.example.SpringDemoBot.service;
 
 import com.example.SpringDemoBot.config.BotConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,6 +12,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+
     final BotConfig botConfig;
 
     public TelegramBot(BotConfig botConfig) {
@@ -18,12 +22,12 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return botConfig.getBotName();
+        return botConfig.getName();
     }
 
     @Override
     public String getBotToken() {
-        return botConfig.getBotToken();
+        return botConfig.getToken();
     }
 
     @Override
@@ -32,9 +36,19 @@ public class TelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
+            // Получение имени пользователя
+            String username = "";
+            if (update.getMessage().getFrom() != null) {
+                username = update.getMessage().getFrom().getUserName();
+                if (username == null || username.isEmpty()) {
+                    // Можно дополнительно взять имя или фамилию
+                    username = update.getMessage().getFrom().getFirstName();
+                }
+            }
+
             switch (messageText) {
                 case "/start":
-                    startCommandReceived(chatId);
+                    startCommandReceived(chatId, username);
                     break;
                 case "/help":
                     sendMessage(chatId, "Список команд: /start, /help");
@@ -45,12 +59,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void startCommandReceived(long chatId) {
-
-        String answer = "Привет, это учебный бот";
-
+    private void startCommandReceived(long chatId, String username) {
+        String answer = "Привет, " + username + "! Это учебный бот.";
         sendMessage(chatId, answer);
-}
+    }
 
     private void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
@@ -58,12 +70,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setText(textToSend);
         try {
             execute(message);
-            // Логируем успешную отправку сообщения
-            System.out.println("Сообщение отправлено: " + textToSend);
+            logger.info("Сообщение отправлено: {}", textToSend);
         } catch (TelegramApiException e) {
-            e.printStackTrace(); // Логируем ошибку
+            logger.error("Ошибка при отправке сообщения: {}", textToSend, e);
         }
-
     }
 }
 

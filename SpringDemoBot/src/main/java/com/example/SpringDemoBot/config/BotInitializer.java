@@ -1,6 +1,8 @@
 package com.example.SpringDemoBot.config;
 
 import com.example.SpringDemoBot.service.TelegramBot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -12,20 +14,19 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 @Component
 public class BotInitializer {
 
+    private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
+
     @Autowired
-    TelegramBot bot;
+    private TelegramBot bot;
 
     @EventListener({ContextRefreshedEvent.class})
-    public void init() throws TelegramApiException {
-
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
+    public void init() {
         try {
+            TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(bot);
-
-        }
-        catch (TelegramApiException e) {
-            e.printStackTrace();
-
+            logger.info("Telegram bot успешно зарегистрирован");
+        } catch (TelegramApiException e) {
+            logger.error("Ошибка при регистрации Telegram бота", e);
         }
     }
 }
