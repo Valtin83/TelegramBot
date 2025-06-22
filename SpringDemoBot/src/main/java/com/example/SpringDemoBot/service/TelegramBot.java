@@ -26,41 +26,38 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botConfig.getBotToken();
     }
 
-    @Override
+
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage()) {
-            update.getMessage().hasText();
-        }
-        String messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
+        String messageText = update.getMessage().getText();
 
-        if (messageText.equals("/start")) {
-            startCommandReceived(chatId, update.getMessage().getChatId());
-        } else {
-            sendMessage(chatId, "Команда не поддерживается");
+        try {
+            String[] parts = messageText.split(" ");
+            double totalLength = 0;
+
+            for (int i = 0; i < parts.length; i += 2) {
+                double length = Double.parseDouble(parts[i]); // длина стороны в мм
+                int quantity = Integer.parseInt(parts[i + 1]); // количество сторон
+                totalLength += (length + 40) * quantity; // добавляем длину с учетом отходов
+            }
+
+            double totalLengthInMeters = totalLength / 1000; // переводим в метры
+            String responseText = "Общий расход материалов: " + totalLengthInMeters + " метров.";
+
+            sendMessage(chatId, responseText);
+        } catch (Exception e) {
+            sendMessage(chatId, "Пожалуйста, введите пары длина (в мм) и количество через пробел, например: 100 5 200 3.");
         }
-
-
     }
 
-    public void startCommandReceived(long chatId, Long id) {
-
-        String answer = "Привет, это учебный бот";
-
-        sendMessage(chatId, answer);
-}
-
-    private void sendMessage(long chatId, String textToSand) {
+    public void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
-        message.setText(textToSand);
+        message.setText(textToSend);
         try {
             execute(message);
         } catch (TelegramApiException e) {
-
+            e.printStackTrace();
         }
-
-
     }
 }
-
