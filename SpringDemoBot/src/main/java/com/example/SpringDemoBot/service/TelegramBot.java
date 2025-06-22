@@ -34,18 +34,27 @@ public class TelegramBot extends TelegramLongPollingBot {
             String[] parts = messageText.split(" ");
             double totalLength = 0;
 
-            for (int i = 0; i < parts.length; i += 2) {
+            // Пробегаемся по всем элементам, кроме последнего
+            for (int i = 0; i < parts.length - 1; i += 2) {
                 double length = Double.parseDouble(parts[i]); // длина стороны в мм
                 int quantity = Integer.parseInt(parts[i + 1]); // количество сторон
                 totalLength += (length + 40) * quantity; // добавляем длину с учетом отходов
             }
 
-            double totalLengthInMeters = totalLength / 1000; // переводим в метры
-            String responseText = "Общая длина с учетом отходов: " + totalLengthInMeters + " метров.";
+            // Получаем множитель из последнего элемента
+            double multiplier = Double.parseDouble(parts[parts.length - 1]);
+            if (multiplier <= 0) {
+                sendMessage(chatId, "Множитель должен быть положительным числом.");
+                return;
+            }
+
+            // Умножаем общую длину на множитель
+            double totalLengthInMeters = (totalLength / 1000) * multiplier; // переводим в метры и применяем множитель
+            String responseText = "Общая длина с учетом отходов и умноженная на " + multiplier + ": " + totalLengthInMeters + " метров.";
 
             sendMessage(chatId, responseText);
         } catch (Exception e) {
-            sendMessage(chatId, "Пожалуйста, введите пары длина (в мм) и количество через пробел, например: 100 5 200 3.");
+            sendMessage(chatId, "Пожалуйста, введите пары длина (в мм) и количество через пробел, а затем множитель, например: 100 5 200 3 2.");
         }
     }
 
